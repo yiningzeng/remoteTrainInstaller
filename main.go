@@ -89,6 +89,7 @@ const createInstallNvidiaDockerSh = "sudo tee /var/local/install-nvidia-docker.s
 	"curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | sudo tee /etc/apt/sources.list.d/nvidia-docker.list\n" +
 	"sudo apt-get update && sudo apt-get install -y nvidia-container-toolkit\n" +
 	"sudo systemctl restart docker\n" +
+	"sudo systemctl disable installNvidiaDocker.service\n" +
 	"EOF"
 const createInstallNvidiaDocker = "sudo tee /lib/systemd/system/installNvidiaDocker.service <<-'EOF'\n" +
 	"[Unit]\n" +
