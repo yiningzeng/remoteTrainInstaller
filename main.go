@@ -81,7 +81,7 @@ const ftpService = "sudo docker run -d \\\n" +
 	"            --add-host service-web:10.10.0.5 \\\n" +
 	"            --restart=always \\\n" +
 	"            registry.cn-hangzhou.aliyuncs.com/baymin/remote-train:ftp"
-const createInstallNvidiaDockerSh = "sudo tee /var/local/install-nvidia-docker.sh <<-'EOF'\n" +
+const createInstallNvidiaDockerSh = "sudo tee /etc/rc.local <<-'EOF'\n" +
 	"#!/bin/bash\n" +
 	"# Add the package repositories\n" +
 	"distribution=$(. /etc/os-release;echo $ID$VERSION_ID)\n" +
@@ -89,23 +89,8 @@ const createInstallNvidiaDockerSh = "sudo tee /var/local/install-nvidia-docker.s
 	"curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | sudo tee /etc/apt/sources.list.d/nvidia-docker.list\n" +
 	"sudo apt-get update && sudo apt-get install -y nvidia-container-toolkit\n" +
 	"sudo systemctl restart docker\n" +
-	"sudo systemctl disable installNvidiaDocker.service\n" +
-	"EOF"
-const createInstallNvidiaDocker = "sudo tee /lib/systemd/system/installNvidiaDocker.service <<-'EOF'\n" +
-	"[Unit]\n" +
-	"Description=nvidia-docker-install Service\n" +
-	"After=network.target\n" +
-	"\n" +
-	"[Service]\n" +
-	"Type=simple\n" +
-	"User=nobody\n" +
-	"Restart=on-failure\n" +
-	"RestartSec=5s\n" +
-	"ExecStart=/var/local/install-nvidia-docker.sh\n" +
-	"ExecReload=/var/local/install-nvidia-docker.sh\n" +
-	"\n" +
-	"[Install]\n" +
-	"WantedBy=multi-user.target\n" +
+	"sudo sh /var/local/create.rc.local.sh\n" +
+	"exit 0\n" +
 	"EOF"
 //var s = spinner.New(spinner.CharSets[35], 100*time.Millisecond)  // Build our new spinner
 
@@ -195,17 +180,18 @@ func main() {
 		fmt.Print("正在下载cuda-repo-ubuntu1804-11-0-local_11.0.1-450.36.06-1_amd64.deb")
 		_ = execCommand("/bin/bash", getPar("wget http://developer.download.nvidia.com/compute/cuda/11.0.1/local_installers/cuda-repo-ubuntu1804-11-0-local_11.0.1-450.36.06-1_amd64.deb -O local-software/cuda-repo-ubuntu1804-11-0-local_11.0.1-450.36.06-1_amd64.deb"))
 	}
-	if !IsExist("/var/local/install-nvidia-docker.sh") {
-		fmt.Print("生成服务")
-		_ = execCommand("/bin/bash", getPar(createInstallNvidiaDockerSh))
-	}
-	if !IsExist("/lib/systemd/system/installNvidiaDocker.service") {
-		fmt.Print("生成服务")
-		_ = execCommand("/bin/bash", getPar(createInstallNvidiaDocker))
-	}
-	_ = execCommand("/bin/bash", getPar("sudo chmod +x /var/local/install-nvidia-docker.sh"))
-	// 设置开机启动
-	_ = execCommand("/bin/bash", getPar("sudo systemctl enable /lib/systemd/system/installNvidiaDocker.service"))
+	_ = execCommand("/bin/bash", getPar(createInstallNvidiaDockerSh))
+	//if !IsExist("/var/local/install-nvidia-docker.sh") {
+	//	fmt.Print("生成服务")
+	//	_ = execCommand("/bin/bash", getPar(createInstallNvidiaDockerSh))
+	//}
+	//if !IsExist("/lib/systemd/system/installNvidiaDocker.service") {
+	//	fmt.Print("生成服务")
+	//	_ = execCommand("/bin/bash", getPar(createInstallNvidiaDocker))
+	//}
+	//_ = execCommand("/bin/bash", getPar("sudo chmod +x /var/local/install-nvidia-docker.sh"))
+	//设置开机启动
+	//_ = execCommand("/bin/bash", getPar("sudo systemctl enable /lib/systemd/system/installNvidiaDocker.service"))
 
 	// 安装anconda
 	_ = execCommand("/bin/bash", getPar("sudo sh local-software/Anaconda3-2019.10-Linux-x86_64.sh -b -u"))
@@ -215,18 +201,18 @@ func main() {
 	_ = execCommand("/bin/bash", getPar("sudo apt-get -y install curl"))
 	_ = execCommand("/bin/bash", getPar("mkdir -p /opt/remote_train_web /opt/remote_train_service /assets"))
 	_ = execCommand("/bin/bash", getPar("sudo chmod -R 777 /opt/remote_train_web /opt/remote_train_service /assets"))
-	_ = execCommand("/bin/bash", getPar("sudo curl \"http://pan.qtingvision.com:888/s/LCP3rwj2GFJ4RmE/download?path=%2F&files=web.tar.gz\" -o /opt/remote_train_web/web.tar.gz", "正在下载安装服务支持包[1/4]"))
+	_ = execCommand("/bin/bash", getPar("sudo curl \"http://pan.qtingvision.com:888/s/LCP3rwj2GFJ4RmE/download?path=%2F&files=web.tar.gz\" -o /opt/remote_train_web/web.tar.gz", "正在下载安装服务支持包[1/5]"))
 
 	_ = execCommand("/bin/bash", getPar("sudo tar -xzf /opt/remote_train_web/web.tar.gz -C /opt/remote_train_web"))
-	_ = execCommand("/bin/bash", getPar("source ~/.bashrc && pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple && pip install visdom", "正在下载安装服务支持包[2/4]"))
+	_ = execCommand("/bin/bash", getPar("source ~/.bashrc && pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple && pip install visdom", "正在下载安装服务支持包[2/5]"))
 
-	_ = execCommand("/bin/bash", getPar("sudo curl \"http://pan.qtingvision.com:888/s/LCP3rwj2GFJ4RmE/download?path=%2F&files=visdom-static.tar.gz\" -o /opt/remote_train_web/visdom-static.tar.gz", "正在下载安装服务支持包[3/4]"))
+	_ = execCommand("/bin/bash", getPar("sudo curl \"http://pan.qtingvision.com:888/s/LCP3rwj2GFJ4RmE/download?path=%2F&files=visdom-static.tar.gz\" -o /opt/remote_train_web/visdom-static.tar.gz", "正在下载安装服务支持包[3/5]"))
 	_ = execCommand("/bin/bash", getPar("sudo tar -xzf /opt/remote_train_web/visdom-static.tar.gz -C ~/anaconda3/lib/python3.7/site-packages/visdom/static"))
 
-	_ = execCommand("/bin/bash", getPar("sudo curl \"http://pan.qtingvision.com:888/s/LCP3rwj2GFJ4RmE/download?path=%2F&files=api.tar.gz\" -o /opt/remote_train_service/api.tar.gz", "正在下载安装服务支持包[4/4]"))
+	_ = execCommand("/bin/bash", getPar("sudo curl \"http://pan.qtingvision.com:888/s/LCP3rwj2GFJ4RmE/download?path=%2F&files=api.tar.gz\" -o /opt/remote_train_service/api.tar.gz", "正在下载安装服务支持包[4/5]"))
 	_ = execCommand("/bin/bash", getPar("sudo tar -xzf /opt/remote_train_service/api.tar.gz -C /opt/remote_train_service && sudo mv -f /opt/remote_train_service/dockertrain /usr/local/bin/dockertrain"))
-
-
+	_ = execCommand("/bin/bash", getPar("sudo curl \"http://pan.qtingvision.com:888//s/tdRa9G64AmwSXjQ/download\" -o /var/local/create.rc.local.sh", "正在下载安装服务支持包[5/5]"))
+	_ = execCommand("/bin/bash", getPar("sudo chmod +x /var/local/create.rc.local.sh"))
 	if !debug {
 		_ = execCommand("/bin/bash", getPar(dockerInstaller))
 	}
@@ -253,5 +239,6 @@ func main() {
 	//fmt.Print(12,13, "\n")   //输出12 13   数值之间输出一个空格
 	//fmt.Printf("%v", "asdsds")
 	//fmt.Printf("%d\n", 10)
-	fmt.Printf("所有服务安装完成")
+	fmt.Printf("所有服务安装完成，正在重启继续安装...")
+	_ = execCommand("/bin/bash", getPar("sudo reboot"))
 }
