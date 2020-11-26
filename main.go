@@ -181,6 +181,7 @@ func main() {
 		_ = execCommand("/bin/bash", getPar("wget http://developer.download.nvidia.com/compute/cuda/11.0.1/local_installers/cuda-repo-ubuntu1804-11-0-local_11.0.1-450.36.06-1_amd64.deb -O local-software/cuda-repo-ubuntu1804-11-0-local_11.0.1-450.36.06-1_amd64.deb"))
 	}
 	_ = execCommand("/bin/bash", getPar(createInstallNvidiaDockerSh))
+	_ = execCommand("/bin/bash", getPar("sudo chmod +x /etc/rc.local"))
 	//if !IsExist("/var/local/install-nvidia-docker.sh") {
 	//	fmt.Print("生成服务")
 	//	_ = execCommand("/bin/bash", getPar(createInstallNvidiaDockerSh))
@@ -212,6 +213,7 @@ func main() {
 	_ = execCommand("/bin/bash", getPar("sudo curl \"http://pan.qtingvision.com:888/s/LCP3rwj2GFJ4RmE/download?path=%2F&files=api.tar.gz\" -o /opt/remote_train_service/api.tar.gz", "正在下载安装服务支持包[4/5]"))
 	_ = execCommand("/bin/bash", getPar("sudo tar -xzf /opt/remote_train_service/api.tar.gz -C /opt/remote_train_service && sudo mv -f /opt/remote_train_service/dockertrain /usr/local/bin/dockertrain"))
 	_ = execCommand("/bin/bash", getPar("sudo curl \"http://pan.qtingvision.com:888//s/tdRa9G64AmwSXjQ/download\" -o /var/local/create.rc.local.sh", "正在下载安装服务支持包[5/5]"))
+
 	_ = execCommand("/bin/bash", getPar("sudo chmod +x /var/local/create.rc.local.sh"))
 	if !debug {
 		_ = execCommand("/bin/bash", getPar(dockerInstaller))
