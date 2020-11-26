@@ -199,7 +199,7 @@ func main() {
 
 	_ = execCommand("/bin/bash", getPar(nvidiaDriverAndCuda))
 	_ = execCommand("/bin/bash", getPar("sudo apt-get -y install curl"))
-	_ = execCommand("/bin/bash", getPar("mkdir -p /opt/remote_train_web /opt/remote_train_service /assets"))
+	_ = execCommand("/bin/bash", getPar("sudo mkdir -p /opt/remote_train_web /opt/remote_train_service /assets"))
 	_ = execCommand("/bin/bash", getPar("sudo chmod -R 777 /opt/remote_train_web /opt/remote_train_service /assets"))
 	_ = execCommand("/bin/bash", getPar("sudo curl \"http://pan.qtingvision.com:888/s/LCP3rwj2GFJ4RmE/download?path=%2F&files=web.tar.gz\" -o /opt/remote_train_web/web.tar.gz", "正在下载安装服务支持包[1/5]"))
 
@@ -223,6 +223,12 @@ func main() {
 	_ = execCommand("/bin/bash", getPar(ftpService, "正在下载和开启FTP上传服务"))
 	_ = execCommand("/bin/bash", getPar("sudo docker run -d -p 9000:9000 -v /var/run/docker.sock:/var/run/docker.sock --restart=always --name prtainer portainer/portainer",
 		"正在下载和开启Docker管理服务"))
+	_ = execCommand("/bin/bash", getPar(`cd ~/anaconda3/bin/ && echo "export PATH=\"$PWD:\$PATH\"" >> ~/.bashrc`, "配置环境变量"))
+	_ = execCommand("/bin/bash", getPar(`source ~/.bashrc && curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python get-pip.py`, "配置环境变量"))
+	_ = execCommand("/bin/bash", getPar(`sudo apt install -y postgresql`, "配置环境变量"))
+	_ = execCommand("/bin/bash", getPar(`sudo apt install -y python-psycopg2`, "配置环境变量"))
+	_ = execCommand("/bin/bash", getPar(`sudo apt install -y libpq-dev`, "配置环境变量"))
+	_ = execCommand("/bin/bash", getPar(`source ~/.bashrc && pip install pika psycopg2 wxpy retry visdom flask_cors apscheduler`, "配置环境变量"))
 
 
 	//cmd := exec.Command("touch", "test_file")
