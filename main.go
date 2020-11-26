@@ -221,6 +221,10 @@ func main() {
 	_ = execCommand("/bin/bash", getPar(rabbitmqService, "正在下载和开启队列服务"))
 	_ = execCommand("/bin/bash", getPar(webService, "正在下载和开启后台管理服务"))
 	_ = execCommand("/bin/bash", getPar(ftpService, "正在下载和开启FTP上传服务"))
+	_ = execCommand("/bin/bash", getPar("sudo docker run -d -p 9000:9000 -v /var/run/docker.sock:/var/run/docker.sock --restart=always --name prtainer portainer/portainer",
+		"正在下载和开启Docker管理服务"))
+
+
 	//cmd := exec.Command("touch", "test_file")
 	//err := cmd.Run()
 	//cmd = exec.Command("/bin/bash", "-c", "sudo apt-get remove docker docker-engine docker.io containerd runc\n" +
