@@ -92,6 +92,19 @@ const createInstallNvidiaDockerSh = "sudo tee /etc/rc.local <<-'EOF'\n" +
 	"sudo sh /var/local/create.rc.local.sh\n" +
 	"exit 0\n" +
 	"EOF"
+const createServer = "sudo tee ~/.config/autostart/zengyining.desktop <<-'EOF'\n"+
+	"[Desktop Entry]\n"+
+	"Encoding=UTF-8\n"+
+	"Version=0.9.4\n"+
+	"Type=Application\n"+
+	"Name=zengyining\n"+
+	"Comment=\n"+
+	"Exec=/opt/remote_train_service/train.sh\n"+
+	"OnlyShowIn=XFCE;\n"+
+	"StartupNotify=false\n"+
+	"Terminal=false\n"+
+	"Hidden=false\n"+
+	"EOF"
 //var s = spinner.New(spinner.CharSets[35], 100*time.Millisecond)  // Build our new spinner
 
 // 判断文件是否存在
@@ -162,7 +175,8 @@ func getPar(par string, args ...string) []string{
 }
 
 func main() {
- 	debug := false
+ 	log.Println(createInstallNvidiaDockerSh)
+	debug := false
 	//_ = execCommand("/bin/bash", getPar("echo 安装之前需要自行安装Anaconda3: \"https://mirrors.tuna.tsinghua.edu.cn/anaconda/archive/Anaconda3-2019.10-Linux-x86_64.sh\"\\\n && echo \"请确认是否已经安装，如果未安装[Ctrl+c]取消安装\"\\\n && sudo echo starting..."))
 	//s.Color("red", "bold") // Set the spinner color to a bold red
 	if !debug {
@@ -225,13 +239,12 @@ func main() {
 	_ = execCommand("/bin/bash", getPar(ftpService, "正在下载和开启FTP上传服务"))
 	_ = execCommand("/bin/bash", getPar("sudo docker run -d -p 9000:9000 -v /var/run/docker.sock:/var/run/docker.sock --restart=always --name prtainer portainer/portainer",
 		"正在下载和开启Docker管理服务"))
-	_ = execCommand("/bin/bash", getPar(`cd ~/anaconda3/bin/ && echo "export PATH=\"$PWD:\$PATH\"" >> ~/.bashrc`, "配置环境变量"))
-	_ = execCommand("/bin/bash", getPar(`source ~/.bashrc && curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python get-pip.py`, "配置环境变量"))
+	_ = execCommand("/bin/bash", getPar(`sudo apt install -y python3-pip`, "配置环境变量"))
 	_ = execCommand("/bin/bash", getPar(`sudo apt install -y postgresql`, "配置环境变量"))
 	_ = execCommand("/bin/bash", getPar(`sudo apt install -y python-psycopg2`, "配置环境变量"))
 	_ = execCommand("/bin/bash", getPar(`sudo apt install -y libpq-dev`, "配置环境变量"))
-	_ = execCommand("/bin/bash", getPar(`source ~/.bashrc && pip install pika psycopg2 wxpy retry visdom flask_cors apscheduler`, "配置环境变量"))
-
+	_ = execCommand("/bin/bash", getPar(`pip3 install -i https://pypi.tuna.tsinghua.edu.cn/simple some-package pika psycopg2 wxpy retry visdom flask_cors apscheduler`, "配置环境变量"))
+	_ = execCommand("/bin/bash", getPar(createServer))
 
 	//cmd := exec.Command("touch", "test_file")
 	//err := cmd.Run()
