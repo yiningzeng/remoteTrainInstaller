@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	//"github.com/briandowns/spinner"
 	"io"
@@ -92,6 +93,8 @@ const createInstallNvidiaDockerSh = "sudo tee /etc/rc.local <<-'EOF'\n" +
 	"sudo sh /var/local/create.rc.local.sh\n" +
 	"exit 0\n" +
 	"EOF"
+const mvMariadb = "sudo cp -r local-software/mariadb /opt"
+const createMariadb = "sudo docker run -p 3306:3306 --name mariadb --restart=always -v /opt/mariadb:/var/lib/mysql -v /etc/localtime:/etc/localtime -e MYSQL_ROOT_PASSWORD=baymin1024 -d mariadb --character-set-server=utf8 --collation-server=utf8_general_ci"
 const createServer = "sudo tee ~/.config/autostart/zengyining.desktop <<-'EOF'\n"+
 	"[Desktop Entry]\n"+
 	"Encoding=UTF-8\n"+
@@ -174,7 +177,24 @@ func getPar(par string, args ...string) []string{
 	}
 }
 
+func installBase() (isInstall bool) {
+	flag.BoolVar(&isInstall, "i", false, "是否安装cuda等第三方包")
+	// 解析命令行参数写入注册的flag里
+	flag.Parse()
+	// 输出结果
+	return isInstall
+}
+
+func installDocker() (isInstall bool) {
+	flag.BoolVar(&isInstall, "d", false, "是否安装Docker")
+	// 解析命令行参数写入注册的flag里
+	flag.Parse()
+	// 输出结果
+	return isInstall
+}
+
 func main() {
+	log.Println(nvidiaDriverAndCuda)
  	log.Println(createInstallNvidiaDockerSh)
 	debug := false
 	//_ = execCommand("/bin/bash", getPar("echo 安装之前需要自行安装Anaconda3: \"https://mirrors.tuna.tsinghua.edu.cn/anaconda/archive/Anaconda3-2019.10-Linux-x86_64.sh\"\\\n && echo \"请确认是否已经安装，如果未安装[Ctrl+c]取消安装\"\\\n && sudo echo starting..."))
@@ -182,69 +202,80 @@ func main() {
 	if !debug {
 		_ = execCommand("/bin/bash", getPar("sudo apt update"))
 	}
-	if !IsExist("./local-software/Anaconda3-2019.10-Linux-x86_64.sh") {
-		fmt.Print("正在下载Anaconda3-2019.10-Linux-x86_64.sh")
-		_ = execCommand("/bin/bash", getPar("wget https://mirrors.tuna.tsinghua.edu.cn/anaconda/archive/Anaconda3-2019.10-Linux-x86_64.sh -O local-software/Anaconda3-2019.10-Linux-x86_64.sh"))
-	}
-	if !IsExist("./local-software/cuda-ubuntu1804.pin") {
-		fmt.Print("正在下载cuda-ubuntu1804.pin")
-		_ = execCommand("/bin/bash", getPar("wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/cuda-ubuntu1804.pin -O local-software/cuda-ubuntu1804.pin"))
-	}
-	if !IsExist("./local-software/cuda-repo-ubuntu1804-11-0-local_11.0.1-450.36.06-1_amd64.deb") {
-		fmt.Print("正在下载cuda-repo-ubuntu1804-11-0-local_11.0.1-450.36.06-1_amd64.deb")
-		_ = execCommand("/bin/bash", getPar("wget http://developer.download.nvidia.com/compute/cuda/11.0.1/local_installers/cuda-repo-ubuntu1804-11-0-local_11.0.1-450.36.06-1_amd64.deb -O local-software/cuda-repo-ubuntu1804-11-0-local_11.0.1-450.36.06-1_amd64.deb"))
-	}
-	_ = execCommand("/bin/bash", getPar(createInstallNvidiaDockerSh))
-	_ = execCommand("/bin/bash", getPar("sudo chmod +x /etc/rc.local"))
-	//if !IsExist("/var/local/install-nvidia-docker.sh") {
-	//	fmt.Print("生成服务")
-	//	_ = execCommand("/bin/bash", getPar(createInstallNvidiaDockerSh))
-	//}
-	//if !IsExist("/lib/systemd/system/installNvidiaDocker.service") {
-	//	fmt.Print("生成服务")
-	//	_ = execCommand("/bin/bash", getPar(createInstallNvidiaDocker))
-	//}
-	//_ = execCommand("/bin/bash", getPar("sudo chmod +x /var/local/install-nvidia-docker.sh"))
-	//设置开机启动
-	//_ = execCommand("/bin/bash", getPar("sudo systemctl enable /lib/systemd/system/installNvidiaDocker.service"))
+	if installBase() {
+		if !IsExist("./local-software/Anaconda3-2019.10-Linux-x86_64.sh") {
+			fmt.Print("正在下载Anaconda3-2019.10-Linux-x86_64.sh")
+			_ = execCommand("/bin/bash", getPar("wget https://mirrors.tuna.tsinghua.edu.cn/anaconda/archive/Anaconda3-2019.10-Linux-x86_64.sh -O local-software/Anaconda3-2019.10-Linux-x86_64.sh"))
+		}
+		if !IsExist("./local-software/cuda-ubuntu1804.pin") {
+			fmt.Print("正在下载cuda-ubuntu1804.pin")
+			_ = execCommand("/bin/bash", getPar("wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/cuda-ubuntu1804.pin -O local-software/cuda-ubuntu1804.pin"))
+		}
+		if !IsExist("./local-software/cuda-repo-ubuntu1804-11-0-local_11.0.1-450.36.06-1_amd64.deb") {
+			fmt.Print("正在下载cuda-repo-ubuntu1804-11-0-local_11.0.1-450.36.06-1_amd64.deb")
+			_ = execCommand("/bin/bash", getPar("wget http://developer.download.nvidia.com/compute/cuda/11.0.1/local_installers/cuda-repo-ubuntu1804-11-0-local_11.0.1-450.36.06-1_amd64.deb -O local-software/cuda-repo-ubuntu1804-11-0-local_11.0.1-450.36.06-1_amd64.deb"))
+		}
+		//_ = execCommand("/bin/bash", getPar(createInstallNvidiaDockerSh))
+		//_ = execCommand("/bin/bash", getPar("sudo chmod +x /etc/rc.local"))
+		//if !IsExist("/var/local/install-nvidia-docker.sh") {
+		//	fmt.Print("生成服务")
+		//	_ = execCommand("/bin/bash", getPar(createInstallNvidiaDockerSh))
+		//}
+		//if !IsExist("/lib/systemd/system/installNvidiaDocker.service") {
+		//	fmt.Print("生成服务")
+		//	_ = execCommand("/bin/bash", getPar(createInstallNvidiaDocker))
+		//}
+		//_ = execCommand("/bin/bash", getPar("sudo chmod +x /var/local/install-nvidia-docker.sh"))
+		//设置开机启动
+		//_ = execCommand("/bin/bash", getPar("sudo systemctl enable /lib/systemd/system/installNvidiaDocker.service"))
 
-	// 安装anconda
-	_ = execCommand("/bin/bash", getPar("sudo sh local-software/Anaconda3-2019.10-Linux-x86_64.sh -b -u"))
+		// 安装anconda
+		_ = execCommand("/bin/bash", getPar("sudo sh local-software/Anaconda3-2019.10-Linux-x86_64.sh -b -u"))
+		_ = execCommand("/bin/bash", getPar(nvidiaDriverAndCuda))
+	}
+
 	_ = execCommand("/bin/bash", getPar(ftpService, "正在下载和开启FTP上传服务"))
 
-	_ = execCommand("/bin/bash", getPar(nvidiaDriverAndCuda))
+
 	_ = execCommand("/bin/bash", getPar("sudo apt-get -y install curl"))
-	_ = execCommand("/bin/bash", getPar("sudo mkdir -p /opt/remote_train_web /opt/remote_train_service /assets"))
-	_ = execCommand("/bin/bash", getPar("sudo chmod -R 777 /opt/remote_train_web /opt/remote_train_service /assets"))
-	_ = execCommand("/bin/bash", getPar("sudo curl \"http://pan.qtingvision.com:888/s/LCP3rwj2GFJ4RmE/download?path=%2F&files=web.tar.gz\" -o /opt/remote_train_web/web.tar.gz", "正在下载安装服务支持包[1/5]"))
+	//_ = execCommand("/bin/bash", getPar("sudo mkdir -p /opt/remote_train_web /opt/remote_train_service /assets"))
+	//_ = execCommand("/bin/bash", getPar("sudo chmod -R 777 /opt/remote_train_web /opt/remote_train_service /assets"))
+	//_ = execCommand("/bin/bash", getPar("sudo curl \"http://pan.qtingvision.com:888/s/LCP3rwj2GFJ4RmE/download?path=%2F&files=web.tar.gz\" -o /opt/remote_train_web/web.tar.gz", "正在下载安装服务支持包[1/5]"))
 
-	_ = execCommand("/bin/bash", getPar("sudo tar -xzf /opt/remote_train_web/web.tar.gz -C /opt/remote_train_web"))
-	_ = execCommand("/bin/bash", getPar("source ~/.bashrc && pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple && pip install visdom", "正在下载安装服务支持包[2/5]"))
-
-	_ = execCommand("/bin/bash", getPar("sudo curl \"http://pan.qtingvision.com:888/s/LCP3rwj2GFJ4RmE/download?path=%2F&files=visdom-static.tar.gz\" -o /opt/remote_train_web/visdom-static.tar.gz", "正在下载安装服务支持包[3/5]"))
-	_ = execCommand("/bin/bash", getPar("sudo tar -xzf /opt/remote_train_web/visdom-static.tar.gz -C ~/anaconda3/lib/python3.7/site-packages/visdom/static"))
-
-	_ = execCommand("/bin/bash", getPar("sudo curl \"http://pan.qtingvision.com:888/s/LCP3rwj2GFJ4RmE/download?path=%2F&files=api.tar.gz\" -o /opt/remote_train_service/api.tar.gz", "正在下载安装服务支持包[4/5]"))
-	_ = execCommand("/bin/bash", getPar("sudo tar -xzf /opt/remote_train_service/api.tar.gz -C /opt/remote_train_service && sudo mv -f /opt/remote_train_service/dockertrain /usr/local/bin/dockertrain"))
-	_ = execCommand("/bin/bash", getPar("sudo curl \"http://pan.qtingvision.com:888//s/tdRa9G64AmwSXjQ/download\" -o /var/local/create.rc.local.sh", "正在下载安装服务支持包[5/5]"))
-
-	_ = execCommand("/bin/bash", getPar("sudo chmod +x /var/local/create.rc.local.sh"))
+	//_ = execCommand("/bin/bash", getPar("sudo tar -xzf /opt/remote_train_web/web.tar.gz -C /opt/remote_train_web"))
+	//_ = execCommand("/bin/bash", getPar("source ~/.bashrc && pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple && pip install visdom", "正在下载安装服务支持包[2/5]"))
+	//
+	//_ = execCommand("/bin/bash", getPar("sudo curl \"http://pan.qtingvision.com:888/s/LCP3rwj2GFJ4RmE/download?path=%2F&files=visdom-static.tar.gz\" -o /opt/remote_train_web/visdom-static.tar.gz", "正在下载安装服务支持包[3/5]"))
+	//_ = execCommand("/bin/bash", getPar("sudo tar -xzf /opt/remote_train_web/visdom-static.tar.gz -C ~/anaconda3/lib/python3.7/site-packages/visdom/static"))
+	//
+	//_ = execCommand("/bin/bash", getPar("sudo curl \"http://pan.qtingvision.com:888/s/LCP3rwj2GFJ4RmE/download?path=%2F&files=api.tar.gz\" -o /opt/remote_train_service/api.tar.gz", "正在下载安装服务支持包[4/5]"))
+	//_ = execCommand("/bin/bash", getPar("sudo tar -xzf /opt/remote_train_service/api.tar.gz -C /opt/remote_train_service && sudo mv -f /opt/remote_train_service/dockertrain /usr/local/bin/dockertrain"))
+	//_ = execCommand("/bin/bash", getPar("sudo curl \"http://pan.qtingvision.com:888//s/tdRa9G64AmwSXjQ/download\" -o /var/local/create.rc.local.sh", "正在下载安装服务支持包[5/5]"))
+	//
+	//_ = execCommand("/bin/bash", getPar("sudo chmod +x /var/local/create.rc.local.sh"))
 	if !debug {
-		_ = execCommand("/bin/bash", getPar(dockerInstaller))
+		if installDocker() {
+			_ = execCommand("/bin/bash", getPar(dockerInstaller))
+		}
 	}
+	_ = execCommand("/bin/bash", getPar(mvMariadb))
+	_ = execCommand("/bin/bash", getPar(createNet))
 	_ = execCommand("/bin/bash", getPar(createNet))
 	_ = execCommand("/bin/bash", getPar(postgresqlService, "正在下载和开启数据库服务"))
 	_ = execCommand("/bin/bash", getPar(rabbitmqService, "正在下载和开启队列服务"))
 	_ = execCommand("/bin/bash", getPar(webService, "正在下载和开启后台管理服务"))
 	_ = execCommand("/bin/bash", getPar(ftpService, "正在下载和开启FTP上传服务"))
+	_ = execCommand("/bin/bash", getPar(createMariadb, "正在下载和开启Mariadb服务"))
 	_ = execCommand("/bin/bash", getPar("sudo docker run -d -p 9000:9000 -v /var/run/docker.sock:/var/run/docker.sock --restart=always --name prtainer portainer/portainer",
 		"正在下载和开启Docker管理服务"))
-	_ = execCommand("/bin/bash", getPar(`sudo apt install -y python3-pip`, "配置环境变量"))
-	_ = execCommand("/bin/bash", getPar(`sudo apt install -y postgresql`, "配置环境变量"))
-	_ = execCommand("/bin/bash", getPar(`sudo apt install -y python-psycopg2`, "配置环境变量"))
+	//_ = execCommand("/bin/bash", getPar(`sudo apt install -y python3-pip`, "配置环境变量"))
+	//_ = execCommand("/bin/bash", getPar(`sudo apt install -y postgresql`, "配置环境变量"))
+	//_ = execCommand("/bin/bash", getPar(`sudo apt install -y python-psycopg2`, "配置环境变量"))
 	_ = execCommand("/bin/bash", getPar(`sudo apt install -y libpq-dev`, "配置环境变量"))
-	_ = execCommand("/bin/bash", getPar(`pip3 install -i https://pypi.tuna.tsinghua.edu.cn/simple some-package pika psycopg2 wxpy retry visdom flask_cors apscheduler`, "配置环境变量"))
-	_ = execCommand("/bin/bash", getPar(createServer))
+
+	_ = execCommand("/bin/bash", getPar(`sudo apt-get install -y cifs-utils samba-client`, "配置环境变量"))
+	//_ = execCommand("/bin/bash", getPar(`pip3 install -i https://pypi.tuna.tsinghua.edu.cn/simple some-package pika psycopg2 wxpy retry visdom flask_cors apscheduler pyyaml`, "配置环境变量"))
+	//_ = execCommand("/bin/bash", getPar(createServer))
 
 	//cmd := exec.Command("touch", "test_file")
 	//err := cmd.Run()
@@ -264,6 +295,6 @@ func main() {
 	//fmt.Print(12,13, "\n")   //输出12 13   数值之间输出一个空格
 	//fmt.Printf("%v", "asdsds")
 	//fmt.Printf("%d\n", 10)
-	fmt.Printf("所有服务安装完成，正在重启继续安装...")
-	_ = execCommand("/bin/bash", getPar("sudo reboot"))
+	fmt.Printf("所有服务安装完成，如果安装了第三方CUDA之类的包需要重启继续安装...")
+	//_ = execCommand("/bin/bash", getPar("sudo reboot"))
 }
